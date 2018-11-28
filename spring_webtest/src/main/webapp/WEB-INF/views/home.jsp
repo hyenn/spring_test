@@ -8,7 +8,7 @@
 
 <c:choose>
 	<c:when test="${empty sessionScope.id }">
-		<c:set var="str" value="메인페이지입니다."/>
+		<c:set var="str" value="기본 페이지입니다."/>
 	</c:when>
 	<c:otherwise>
 		<c:set var="str" value="안녕하세요 ${sessionScope.id }님 "/>		
