@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+
+	<insert id="createRe" parameterType="BoardDTO">
+		insert into	board(num,name,subject,content,regdate,passwd,ip, 
+		filename,filesize,ref,indent,ansnum,refnum)
+		values((select nvl(max(num),0)+1 as num from board),#{name},#{subject},#{content},sysdate,#{passwd},
+		#{ip},#{filename, jdbcType=VARCHAR},#{filesize, jdbcType=INTEGER},#{ref},#{indent}+1,#{ansnum}+1,#{num})
+	</insert>
+
+	<update id="upAnsnum" parameterType="Map">
+		update board
+		set ansnum = ansnum + 1
+		where ref = #{ref} and ansnum > #{ansnum}
+	</update>
+
+	<select id="readRe" resultType="BoardDTO" parameterType="int">
+		select
+		num,subject,ref,indent,ansnum
+		from board
+		where num=#{num}
+	</select>
+
+	<delete id="delete" parameterType="int">
+		delete board where num=#{num}
+	</delete>
+	
+	<select id="CkRefnum" parameterType="int" resultType="int">
+		select count(*) from board 
+		where refnum=#{num}              
+	</select>
+
+	<update id="update" parameterType="BoardDTO">
+		update board
+		set name = #{name}, subject = #{subject}, content =
+		#{content}
+
+		<if test="filesize>0">
+			, filename = #{filename},
+			filesize = #{filesize}
+		</if>
+		where num = #{num}
+	</update>
+
+	<select id="chPasswd" parameterType="Map" resultType="int">
+		select
+		count(*) as cnt
+		from board
+		where num=#{num} and passwd=#{passwd}
+	</select>
+
+	<update id="upviewCnt" parameterType="int">
+		update board
+		set count =
+		count + 1
+		where num=#{num}
+	</update>
+
+	<insert id="create" parameterType="BoardDTO">
+		insert into
+		board(num,name,subject,content,regdate,passwd,ip,filename,filesize,ref)
+		values((select nvl(max(num),0)+1 as num from
+		board),#{name},#{subject},#{content},sysdate,
+		#{passwd},#{ip},#{filename, jdbcType=VARCHAR},#{filesize, jdbcType=INTEGER},
+		(select nvl(max(ref),0)+1 as
+		ref from board))
+	</insert>
+
+	<select id="total" parameterType="Map" resultType="int">
+		select count(*) from board
+		<where>
+			<choose>
+				<when test="col=='name'">
+					name like '%'||#{word}||'%'
+				</when>
+				<when test="col=='subject'">
+					subject like '%'||#{word}||'%'
+				</when>
+				<when test="col=='content'">
+					content like '%'||#{word}||'%'
+				</when>
+				<when test="col=='subject_content'">
+					subject like '%'||#{word}||'%'
+					or
+					content like
+					'%'||#{word}||'%'
+				</when>
+			</choose>
+		</where>
+	</select>
+
+	<select id="list" resultType="BoardDTO" parameterType="Map">
+
+		select num,name,subject,regdate,count,indent,r
+		from(
+		select
+		num,name,subject,regdate,count,indent,rownum as r
+		from(
+		select
+		num,name,subject,to_char(regdate,'yyyy-mm-dd') as
+		regdate,count,indent
+		from board
+
+		<where>
+			<choose>
+				<when test="col=='name'">
+					name like '%'||#{word}||'%'
+				</when>
+				<when test="col=='subject'">
+					subject like '%'||#{word}||'%'
+				</when>
+				<when test="col=='content'">
+					content like '%'||#{word}||'%'
+				</when>
+				<when test="col=='subject_content'">
+					subject like '%'||#{word}||'%'
+					or
+					content like
+					'%'||#{word}||'%'
+				</when>
+			</choose>
+		</where>
+		ORDER BY ref DESC, ansnum ASC
+
+		)
+		)                                                                            
+   <![CDATA[                                                                        
+  		  where r>=#{sno} and r<=#{eno}  
+   ]]>
+	</select>
+
+	<select id="read" resultType="BoardDTO" parameterType="int">
+		select *
+		from board
+		where num = #{num}
+	</select>
+
+</mapper>
